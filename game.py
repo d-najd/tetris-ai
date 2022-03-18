@@ -6,8 +6,9 @@
 #         Up - Rotate Stone clockwise
 #     Escape - Quit game
 #     Return - Instant drop
-
-
+import os
+import time
+import threading
 from random import randrange as rand
 import pygame, sys
 
@@ -18,6 +19,11 @@ cell_size = 18
 cols = 10
 rows = 20
 maxfps = 30
+
+#threading is pain
+#_self = -1
+#bestRotation = -1
+#bestX = -1
 
 # Helper color for background grid
 colors = [
@@ -91,6 +97,16 @@ def new_board():
     return board
 
 
+def placePieceAtPos(self, bestX, bestRotation):
+    self.move(-100)
+    self.move(bestX)
+    if bestRotation != 0:
+        for i in range(0, bestRotation):
+            self.rotate_stone()
+    time.sleep(0.3)
+    self.insta_drop()
+
+
 class TetrisApp(object):
     def __init__(self):
         pygame.init()
@@ -110,14 +126,16 @@ class TetrisApp(object):
         self.init_game()
 
     def new_stone(self):
+        self.gameover = False
         self.stone = self.next_stone[:]
         self.next_stone = tetris_shapes[rand(len(tetris_shapes))]
         self.stone_x = int(cols / 2 - len(self.stone[0]) / 2)
         self.stone_y = 0
-        AI.returnBestPos(self.board, self.stone)
-
         if check_collision(self.board, self.stone, (self.stone_x, self.stone_y)):  # if colided with top
             self.gameover = True
+        bestX, bestRotation = AI.returnBestPos(self.board, self.stone)
+        thread = threading.Thread(target=placePieceAtPos, args=(self, bestX, bestRotation))
+        thread.start()
 
     def init_game(self):
         self.board = new_board()

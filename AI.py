@@ -1,3 +1,5 @@
+import time
+
 import game
 from copy import deepcopy
 
@@ -7,7 +9,9 @@ rows = game.rows
 
 # returns the list of actions needed to be performed to reach the best possible position
 def returnBestPos(board_, shape_):
-    print("test")
+    bestScore = -10000000000
+    bestScoreX = -1
+    bestScoreRotation = -1
     shape = shape_[:]
     # iterates through all possible places where a piece can be placed
     for rotation in range(0, 4):  # all rotations where the piece can be placed
@@ -19,32 +23,13 @@ def returnBestPos(board_, shape_):
             while not game.check_collision(board, shape, (x, y)):
                 y += 1
             endPos = game.join_matrixes(board, shape, (x, y))
-            calPosScore(endPos, shape, x, y)
-
-
-"""
-I should be able to use the board and xrange to calculate how much empty spaces are in the given range, we can do this 
-by lighting a ray from top like so
-
-0 0 0 0 0
-0 1 1 0 0
-0 0 1 1 0 
-
-to
-
-9 9 9 9 9
-9 1 1 9 9
-9 0 1 1 9
-
-and calculate the amount of 0's in the grid
-
-    ###########
-    ###NOTE####
-    ###########
-
-we should ignore the piece 1's and if we hit a 1 which isn't from our piece then we should move to the next position in
-the range
-"""
+            curScore = calPosScore(endPos, shape, x, y)
+            if curScore > bestScore:
+                bestScore = curScore
+                bestScoreX = x
+                bestScoreRotation = rotation
+    print(bestScoreX, bestScoreRotation)
+    return bestScoreX, bestScoreRotation
 
 
 # board will be the board with the piece in it
@@ -55,7 +40,25 @@ the range
 def calPosScore(board, shape, startX, startY):
     # calculates the score of a given position
     startY -= 1
+    score = 0 #the smaller the worse
     for x in range(startX, len(shape[0]) + startX):
-        # calculate how many spots to ignore based on the shape
+        x = x
+        toIgnore = ignoreSpots(shape, x - startX)  # TODO optimize this in future so we don't calculate this multiple times
+        hitpart = False
         for y in range(startY, len(board) - 1):
-            print("x " + str(x) + " y " + str(y))
+            if board[y][x] != 0:
+                if toIgnore == 0:
+                    break
+                hitpart = True
+                toIgnore -= 1
+            elif board[y][x] == 0 and hitpart:
+                score -= 1
+    return score
+
+
+def ignoreSpots(shape, x):
+    toIgnore = 0
+    for i in range(0, len(shape)):
+        if shape[i][x] != 0:
+            toIgnore += 1
+    return toIgnore
