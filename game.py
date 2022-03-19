@@ -20,11 +20,6 @@ cols = 10
 rows = 20
 maxfps = 30
 
-#threading is pain
-#_self = -1
-#bestRotation = -1
-#bestX = -1
-
 # Helper color for background grid
 colors = [
     (0, 0, 0),
@@ -98,13 +93,15 @@ def new_board():
 
 
 def placePieceAtPos(self, bestX, bestRotation):
-    self.move(-100)
-    self.move(bestX)
-    if bestRotation != 0:
-        for i in range(0, bestRotation):
-            self.rotate_stone()
-    time.sleep(0.3)
-    self.insta_drop()
+    ignore = False
+    if not ignore:
+        if bestRotation != 0:
+            for i in range(0, bestRotation):
+                self.rotate_stone()
+        self.move(-100)
+        self.move(bestX)
+        time.sleep(0.1)
+        self.insta_drop()
 
 
 class TetrisApp(object):

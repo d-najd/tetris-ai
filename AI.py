@@ -1,11 +1,23 @@
-import time
-
-import game
+import math
 from copy import deepcopy
+
+import AIFields
+import game
 
 cols = game.cols
 rows = game.rows
 
+# region scoreMultipliers
+holesMultiplier = 2
+bumpinessMultiplier = 1.5
+heightMultiplier = 1.2
+bigHoleMultiplier = 5
+holesAboveEmptyPieceMultiplier = 3
+# multiplier for the number of spots above the empty piece, if left to 0 will be ignored and just add 1 to the score
+subHolesAboveEmptyPieceM = 0
+
+
+# endregion
 
 # returns the list of actions needed to be performed to reach the best possible position
 def returnBestPos(board_, shape_):
@@ -32,27 +44,22 @@ def returnBestPos(board_, shape_):
     return bestScoreX, bestScoreRotation
 
 
-# board will be the board with the piece in it
-# shape is the piece
-# startX is the position where the piece begins, we should be able to use this to calculate the range it occupies
-# starY the height that he piece is currently at
-
 def calPosScore(board, shape, startX, startY):
-    # calculates the score of a given position
-    startY -= 1
-    score = 0 #the smaller the worse
-    for x in range(startX, len(shape[0]) + startX):
-        x = x
-        toIgnore = ignoreSpots(shape, x - startX)  # TODO optimize this in future so we don't calculate this multiple times
-        hitpart = False
-        for y in range(startY, len(board) - 1):
-            if board[y][x] != 0:
-                if toIgnore == 0:
-                    break
-                hitpart = True
-                toIgnore -= 1
-            elif board[y][x] == 0 and hitpart:
-                score -= 1
+    """
+    calculates the score on a given position
+    :param startY:
+    :param startX:
+    :param board: board containing the piece
+    :param shape: the piece
+    :return: the score given to a spot, 0 is the best possible score
+    """
+
+    score = 0
+    score += AIFields.calHoles(board, shape, startX, startY) * holesMultiplier
+    score += AIFields.calBumpiness(board) * bumpinessMultiplier
+    score += AIFields.calBigHole(board) * bigHoleMultiplier
+    score += AIFields.calHolesAboveEPiece(board, subHolesAboveEmptyPieceM)
+    score += (math.fabs(startY - len(board)) * heightMultiplier) * -1
     return score
 
 
